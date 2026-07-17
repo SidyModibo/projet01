@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenRefreshView
 from django.conf import settings
 from .serializers import UserSerializer, CustomTokenObtainPairSerializer
 
@@ -108,3 +109,28 @@ class ProfileView(generics.RetrieveUpdateAPIView):
     
     def get_object(self):
         return self.request.user
+    
+
+class CookieTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        # Récupérer le refresh token depuis le cookie
+        refresh_token = request.COOKIES.get(settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'])
+        
+        if refresh_token:
+            request.data['refresh'] = refresh_token
+        
+        response = super().post(request, *args, **kwargs)
+        
+        if response.status_code == 200:
+            # Mettre à jour le cookie access_token
+            access_token = response.data.get('access')
+            if access_token:
+                response.set_cookie(
+                    settings.SIMPLE_JWT['AUTH_COOKIE'],
+                    access_token,
+                    httponly=True,
+                    secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+                    samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE'],
+                    max_age=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds()
+                )
+        return response

@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 import os 
 from pathlib import Path
+from django.urls import include
+
 from dotenv import load_dotenv
 from datetime import timedelta
 #moi
@@ -231,4 +233,6 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'API pour un site de e-commerce',
     'VERSION': '1.0.0',
 }
+AUTH_USER_MODEL = 'users.User'
+
 #.
